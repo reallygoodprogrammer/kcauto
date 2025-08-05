@@ -19,27 +19,35 @@ func main() {
 		}
 	}
 
+	var lastEpisodeFile string
+	var noLastFile bool
+
+	flag.StringVar(&lastEpisodeFile, "l", "last-episode.txt", "")
+	flag.StringVar(&lastEpisodeFile, "last-episode", "last-episode.txt", "")
+	flag.BoolVar(&noLastFile, "n", false, "")
+	flag.BoolVar(&noLastFile, "no-write", false, "")
+
+	flag.Usage = func() { 
+		fmt.Println("usage: kcauto <url-to-episode>")
+		fmt.Println("\t-l/--last-episode FILENAME\tset last episode file")
+		fmt.Println("\t-n/--no-write\t\t\tdo not create last-episode file")
+		fmt.Println("\t-h/--help\t\t\tdisplay this help message")
+		os.Exit(0)
+	}
+
 	flag.Parse()
-	url := flag.Arg(0)
 	userDataDir := os.Getenv("FIREFOX_PROFILE")
+
+	url := flag.Arg(0)
+	if url == "" {
+		data, err := os.ReadFile(lastEpisodeFile)
+		perr(err)
+		url = string(data)
+	}
 
 	pw, err := playwright.Run()
 	perr(err)
 	defer pw.Stop()
-	/*
-	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
-		Headless: playwright.Bool(false),
-		Args: []string{
-			"--no-sandbox",
-			"--disable-extensions-except=" + extensionPath,
-			"--load-extension=" + extensionPath,
-		},
-	})
-	perr(err)
-	defer browser.Close()
-
-	page, err := browser.NewPage()
-	*/
 
 	context, err := pw.Firefox.LaunchPersistentContext(userDataDir, playwright.BrowserTypeLaunchPersistentContextOptions{
 		Headless: playwright.Bool(false),
@@ -55,7 +63,15 @@ func main() {
 	perr(err)
 
 	for true {
-		time.Sleep(5 * time.Second)
+		if !noLastFile {
+			file, err := os.Create(lastEpisodeFile)
+			perr(err)
+			_, err = file.WriteString(page.URL())
+			perr(err)
+			file.Close()
+		}
+
+		time.Sleep(8 * time.Second)
 
 		videoBox, err := page.QuerySelector("#player_container")
 		perr(err)
@@ -67,12 +83,14 @@ func main() {
 		perr(err)
 
 		popup, err := iframe.QuerySelector(".jwp-popup")
-		if popup == nil && err == nil {
-			page.Click("#player_container")
-		} else {
-			time.Sleep(11 * time.Second)
-			page.Click("#player_container")
-		}
+		perr(err)
+		for popup != nil && err == nil {
+			time.Sleep(3 * time.Second)
+			popup, err = iframe.QuerySelector(".jwp-popup")
+			perr(err)
+		} 
+
+		page.Click("#player_container")
 
 		time.Sleep(5 * time.Second)
 

@@ -23,10 +23,14 @@ export FIREFOX_PROFILE=/full/path/to/firefox/profile/dir
 
 ## Usage
 
-Pass the kiss cartoon episode url as an argument. The script will handle 
-going to the next episode at the end of playback (minus a little time to
-account for some of the credits).
+You can either pass the url of the episode to start playing as an
+argument, or use a 'last-episode' file that contains the url of the
+last episode played. `kcauto` will automatically create one of these
+unless the `-n/--no-write` option is specified.
 
 ```bash
-kcauto <url-to-kiss-cartoon-episode>
+usage: kcauto <url-to-episode>
+	-l/--last-episode FILENAME	set last episode file
+	-n/--no-write			do not create last-episode file
+	-h/--help			display this help message
 ```
