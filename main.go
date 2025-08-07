@@ -71,7 +71,31 @@ func main() {
 			file.Close()
 		}
 
-		time.Sleep(8 * time.Second)
+		time.Sleep(10 * time.Second)
+
+		upgradeBoxClose, err := page.QuerySelector("#pop_close[rel=\"#upgrade_pop\"]")
+		perr(err)
+		if upgradeBoxClose != nil {
+			upgradeBoxClose.Click()
+		}
+
+		hServerOption, err := page.QuerySelector("option[sv=\"hserver\"][selected=\"\"]")
+		perr(err)
+		if hServerOption == nil {
+			options, err := page.QuerySelectorAll("select#selectServer option")
+			perr(err)
+			lastOption := options[len(options)-1]
+			lastValue, err := lastOption.GetAttribute("value")
+			perr(err)
+			selectBox, err := page.QuerySelector("select#selectServer")
+			perr(err)
+			values := []string{lastValue}
+			_, err = selectBox.SelectOption(playwright.SelectOptionValues{ 
+				Values: &values,
+			})
+			perr(err)
+			continue
+		}
 
 		videoBox, err := page.QuerySelector("#player_container")
 		perr(err)
@@ -84,15 +108,14 @@ func main() {
 
 		popup, err := iframe.QuerySelector(".jwp-popup")
 		perr(err)
-		for popup != nil && err == nil {
-			time.Sleep(3 * time.Second)
+		for popup != nil {
 			popup, err = iframe.QuerySelector(".jwp-popup")
 			perr(err)
-		} 
-
+			time.Sleep(3 * time.Second)
+		}
 		page.Click("#player_container")
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(6 * time.Second)
 
 		page.Dblclick("#player_container")
 
