@@ -6,19 +6,20 @@ partially solve that.
 
 ## Setup
 
-Because of the ad atrocity on kisscartoon, I'd add a new firefox profile,
-add uBlock adblocker to the profile, then set the `FIREFOX_PROFILE` environment
-with the full path to the profile directory.
+Because of the ad atrocity on kisscartoon, I'd add a new firefox profile, 
+then set the `FIREFOX_PROFILE` environment with the full path to the 
+profile directory. Because playwright uses the nightly version of firefox,
+you can use the option `setup-profile` for opening the browser and
+adding the ublock extension.
 
 ```bash
 firefox -CreateProfile <new-profile-name>
 export FIREFOX_PROFILE=/full/path/to/firefox/profile/dir
+kcauto --setup-profile
 
 # ...
-# Next you'll open firefox using the profile and add the 
-# uBlock extension . I had to use playwright directly to open
-# firefox to account for the nightly version it uses differing 
-# from my installed firefox version.
+# Then you'll add ublock origin like any other firefox
+# extension.
 ```
 
 ## Usage
@@ -30,7 +31,8 @@ unless the `-n/--no-write` option is specified.
 
 ```bash
 usage: kcauto <url-to-episode>
-	-l/--last-episode FILENAME	set last episode file
-	-n/--no-write			do not create last-episode file
-	-h/--help			display this help message
+	-l/--last-episode FILENAME	set last episode file to FILENAME
+	-n/--no-write               do not create last-episode file
+	-h/--help                   display this help message
+	--setup-profile             open browser using firefox profile (for ublock setup)
 ```

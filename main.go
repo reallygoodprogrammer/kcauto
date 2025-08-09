@@ -21,17 +21,20 @@ func main() {
 
 	var lastEpisodeFile string
 	var noLastFile bool
+	var setup bool
 
 	flag.StringVar(&lastEpisodeFile, "l", "last-episode.txt", "")
 	flag.StringVar(&lastEpisodeFile, "last-episode", "last-episode.txt", "")
 	flag.BoolVar(&noLastFile, "n", false, "")
 	flag.BoolVar(&noLastFile, "no-write", false, "")
+	flag.BoolVar(&setup, "setup-profile", false, "")
 
 	flag.Usage = func() { 
 		fmt.Println("usage: kcauto <url-to-episode>")
 		fmt.Println("\t-l/--last-episode FILENAME\tset last episode file")
 		fmt.Println("\t-n/--no-write\t\t\tdo not create last-episode file")
 		fmt.Println("\t-h/--help\t\t\tdisplay this help message")
+		fmt.Println("\t--setup-profile\t\t\topen browser using firefox profile (for ublock setup)")
 		os.Exit(0)
 	}
 
@@ -39,7 +42,7 @@ func main() {
 	userDataDir := os.Getenv("FIREFOX_PROFILE")
 
 	url := flag.Arg(0)
-	if url == "" {
+	if url == "" && !setup {
 		data, err := os.ReadFile(lastEpisodeFile)
 		perr(err)
 		url = string(data)
@@ -59,6 +62,13 @@ func main() {
 	perr(err)
 	defer page.Close()
 
+	if setup {
+		fmt.Println("use signal interrupt to stop...")
+		for true {
+			time.Sleep(time.Second * 360)
+		}
+	}
+
 	_, err = page.Goto(url)
 	perr(err)
 
@@ -72,12 +82,6 @@ func main() {
 		}
 
 		time.Sleep(10 * time.Second)
-
-		upgradeBoxClose, err := page.QuerySelector("#pop_close[rel=\"#upgrade_pop\"]")
-		perr(err)
-		if upgradeBoxClose != nil {
-			upgradeBoxClose.Click()
-		}
 
 		hServerOption, err := page.QuerySelector("option[sv=\"hserver\"][selected=\"\"]")
 		perr(err)
@@ -100,6 +104,16 @@ func main() {
 		videoBox, err := page.QuerySelector("#player_container")
 		perr(err)
 		videoBox.ScrollIntoViewIfNeeded()
+
+		time.Sleep(time.Second * 1)
+		upgradeBox, err := page.QuerySelector("#upgrade_pop[style=\"display:none\"]")
+		perr(err)
+		if upgradeBox == nil {
+			upgradeBoxClose, err := page.QuerySelector(".pop_close[rel=\"#upgrade_pop\"]")
+			perr(err)
+			upgradeBoxClose.Click()
+		}
+
 
 		iframeElement, err := page.QuerySelector("#player_container iframe")
 		perr(err)
